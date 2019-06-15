@@ -1,0 +1,11 @@
+[package]
+name = "a"
+version = "0.1.0"
+authors = ["Mattia Rossi <mattia.rossi@criptalia.it>"]
+edition = "2018"
+
+[dependencies]
+quicksilver = "*"
+env_logger = "*"
+log = "0.4"
+rand = "*"
