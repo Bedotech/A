@@ -164,24 +164,6 @@ impl State for Game {
     fn draw(&mut self, window: &mut Window) -> Result<()> {
         window.clear(Color::BLACK)?;
 
-        for x in 1..self.grid as i32 {
-            let y_row = x as f32 * self.tile_size_px.y.round();
-            window.draw_ex(
-                &Line::new((0, y_row),(self.screen_size.x, y_row)).with_thickness(1),
-                Col(Color::RED),
-                Transform::IDENTITY,
-                5
-            );
-
-            let x_row = x as f32 * self.tile_size_px.x.round();
-            window.draw_ex(
-                &Line::new((x_row, 0),(x_row, self.screen_size.y)).with_thickness(1),
-                Col(Color::RED),
-                Transform::IDENTITY,
-                5
-            );
-        }
-
         let player = &mut self.player;
         let offset_px = Vector::new(0.5, 0.5);
         let pos_px = self.tile_size_px.times(offset_px) + player.pos.times(self.tile_size_px);
