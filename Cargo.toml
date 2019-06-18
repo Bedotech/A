@@ -5,7 +5,7 @@ authors = ["Mattia Rossi <mattia.rossi@criptalia.it>"]
 edition = "2018"
 
 [dependencies]
-quicksilver = "*"
+quicksilver = { version = "0.3.10", default-features = false, features = ["fonts", "saving"]}
 env_logger = "*"
 log = "0.4"
 rand = "*"

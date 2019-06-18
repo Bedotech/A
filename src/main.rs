@@ -9,6 +9,8 @@ use quicksilver::{
     prelude::*,
 };
 
+mod utils;
+
 #[derive(Clone, Debug, PartialEq)]
 struct Tile {
     pos: Vector,
@@ -90,14 +92,14 @@ impl State for Game {
     fn new() -> Result<Self> {
         let player_asset = Asset::new(Font::load("font.ttf")
             .and_then(|font| {
-                let style = FontStyle::new(72.0, Color::WHITE);
+                let style = FontStyle::new(48.0, Color::WHITE);
                 result(font.render("A", &style))
             })
         );
 
         let asteroid_asset = Asset::new(Font::load("font.ttf")
             .and_then(|font| {
-                let style = FontStyle::new(72.0, Color::WHITE);
+                let style = FontStyle::new(48.0, Color::WHITE);
                 result(font.render("O", &style))
             })
         );
@@ -111,12 +113,12 @@ impl State for Game {
         let last_instant = Instant::now();
         let time_delta = Duration::from_secs(0);
         let screen_size = Vector::new(1000.0, 1000.0);
-        let grid = 12.0;
+        let grid = 30.0;
         let tile_size_px = screen_size.times(Vector::new(
             1.0 / grid,
             1.0 / grid
         ));
-        let mut rng = rand::thread_rng();
+        let rng = rand::thread_rng();
 
         Ok(Self {
             player,
@@ -163,17 +165,17 @@ impl State for Game {
         window.clear(Color::BLACK)?;
 
         for x in 1..self.grid as i32 {
-            let y_row = x as f32 * self.tile_size_px.y;
+            let y_row = x as f32 * self.tile_size_px.y.round();
             window.draw_ex(
-                &Line::new((0, y_row),(self.screen_size.x, y_row)).with_thickness(2.0),
+                &Line::new((0, y_row),(self.screen_size.x, y_row)).with_thickness(1),
                 Col(Color::RED),
                 Transform::IDENTITY,
                 5
             );
 
-            let x_row = x as f32 * self.tile_size_px.y;
+            let x_row = x as f32 * self.tile_size_px.x.round();
             window.draw_ex(
-                &Line::new((x_row, 0),(x_row, self.screen_size.y)).with_thickness(2.0),
+                &Line::new((x_row, 0),(x_row, self.screen_size.y)).with_thickness(1),
                 Col(Color::RED),
                 Transform::IDENTITY,
                 5
@@ -192,7 +194,9 @@ impl State for Game {
         // Draw asteroids
         let asteroids = &mut self.asteroids;
         for asteroid in asteroids {
-            let asteroid_pos = self.tile_size_px.times(offset_px) + asteroid.pos.times(self.tile_size_px);
+            let absolute_pos = Vector::new(asteroid.pos.x % self.tile_size_px.x, (asteroid.pos.y % self.tile_size_px.y).round());
+            let asteroid_pos = self.tile_size_px.times(offset_px) + absolute_pos.times(self.tile_size_px);
+            info!("asteroid pos {}", absolute_pos);
             self.asteroid_asset.execute(|image| {
                 window.draw(&image.area().with_center(asteroid_pos), Img(&image));
                 Ok(())
@@ -205,17 +209,15 @@ impl State for Game {
 
 impl Game {
     // Calulate last time step.
-    fn update_time_step(&mut self) -> Result<()> {
+    fn update_time_step(&mut self) {
         let now = Instant::now();
         let time_step = now.duration_since(self.last_instant.clone());
         self.last_instant = now;
         self.time_delta = time_step;
-
-        Ok(())
     }
 
     // Move asteroid
-    fn update_asteroids(&mut self) -> Result<()> {
+    fn update_asteroids(&mut self) {
         let asteroids = &mut self.asteroids;
 
         for asteroid in asteroids {
@@ -225,12 +227,10 @@ impl Game {
                 info!("DELETE!!!")
             }
         }
-
-        Ok(())
     }
 
     // Remove the asteroids when are out of sight.
-    fn clear_asteroids(&mut self) -> Result<()> {
+    fn clear_asteroids(&mut self) {
         let asteroids = self.asteroids.to_vec();
         let grid = self.grid;
         asteroids
@@ -238,17 +238,15 @@ impl Game {
             .enumerate()
             .filter(|(_, a)| a.pos.x > grid || a.pos.y > grid)
             .map(|(e, _)| self.asteroids.remove(e))
-            .collect::<Vec<_>>();
-
-        Ok(())
+            .for_each(drop);
     }
 
     // Remove the asteroids when are out of sight.
-    fn generate_asteroids(&mut self) -> Result<()> {
+    fn generate_asteroids(&mut self) {
         // If asteroids are 10 wait
-        for i in self.asteroids.len()..20 {
+        for _i in self.asteroids.len()..self.grid as usize {
             let a = Asteroid {
-                pos: Vector::new(self.rng.gen_range(0, 10) ,0),
+                pos: Vector::new(self.rng.gen_range(0, self.grid as u32) ,0),
                 velocity: Vector::new(0.0, self.rng.gen_range(0.8, 2.5)),
                 color: Color::WHITE,
             };
@@ -256,8 +254,6 @@ impl Game {
             self.asteroids.push(a);
         }
 
-
-        Ok(())
     }
 }
 
