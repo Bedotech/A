@@ -1,15 +1,17 @@
-use log::{info};
+use crate::entity::Asteroid;
+
 use std::time::{Duration, Instant};
 use rand::{Rng, ThreadRng};
 use quicksilver::{
     Result,
-    geom::{Line, Transform, Vector},
-    graphics::{Background::Col, Color, Font, FontStyle, Image},
-    lifecycle::{Asset, Settings, State, Window, run},
+    geom::{Vector},
+    graphics::{Color, Font, FontStyle, Image},
+    lifecycle::{Settings, State, Window, run},
     prelude::*,
 };
 
 mod utils;
+mod entity;
 
 #[derive(Clone, Debug, PartialEq)]
 struct Tile {
@@ -45,12 +47,7 @@ struct Entity {
     color: Color,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-struct Asteroid {
-    pos: Vector,
-    velocity: Vector,
-    color: Color,
-}
+
 
 
 fn generate_asteroids() -> Vec<Asteroid> {
@@ -77,32 +74,25 @@ fn generate_asteroids() -> Vec<Asteroid> {
 
 struct Game {
     player: Entity,
-    player_asset: Asset<Image>,
+    player_asset: Image,
+    font: Font,
     asteroids: Vec<Asteroid>,
-    asteroid_asset: Asset<Image>,
+    asteroid_asset: Image,
     last_instant: Instant,
     time_delta: Duration,
     screen_size: Vector,
     grid: f32,
     tile_size_px: Vector,
     rng: ThreadRng,
+    score: i32,
 }
 
 impl State for Game {
     fn new() -> Result<Self> {
-        let player_asset = Asset::new(Font::load("font.ttf")
-            .and_then(|font| {
-                let style = FontStyle::new(48.0, Color::WHITE);
-                result(font.render("A", &style))
-            })
-        );
-
-        let asteroid_asset = Asset::new(Font::load("font.ttf")
-            .and_then(|font| {
-                let style = FontStyle::new(48.0, Color::WHITE);
-                result(font.render("O", &style))
-            })
-        );
+        let style = FontStyle::new(48.0, Color::WHITE);
+        let font = Font::load("clacon.ttf").wait().unwrap();
+        let player_asset = font.render("A", &style).unwrap();
+        let asteroid_asset = font.render("O", &style).unwrap();
 
         let player = Entity {
             pos: Vector::new(0,0),
@@ -119,10 +109,12 @@ impl State for Game {
             1.0 / grid
         ));
         let rng = rand::thread_rng();
+        let score = 0;
 
         Ok(Self {
             player,
             player_asset,
+            font,
             asteroids,
             asteroid_asset,
             last_instant,
@@ -131,6 +123,7 @@ impl State for Game {
             grid,
             tile_size_px,
             rng,
+            score,
         })
     }
 
@@ -169,21 +162,32 @@ impl State for Game {
         let pos_px = self.tile_size_px.times(offset_px) + player.pos.times(self.tile_size_px);
 
         // Draw player
-        self.player_asset.execute(|image| {
-            window.draw(&image.area().with_center(pos_px), Img(&image));
-            Ok(())
-        });
+        window.draw(
+            &self.player_asset.area().with_center(pos_px),
+            &self.player_asset,
+        );
+
         // Draw asteroids
         let asteroids = &mut self.asteroids;
         for asteroid in asteroids {
             let absolute_pos = Vector::new(asteroid.pos.x % self.tile_size_px.x, (asteroid.pos.y % self.tile_size_px.y).round());
             let asteroid_pos = self.tile_size_px.times(offset_px) + absolute_pos.times(self.tile_size_px);
-            info!("asteroid pos {}", absolute_pos);
-            self.asteroid_asset.execute(|image| {
-                window.draw(&image.area().with_center(asteroid_pos), Img(&image));
-                Ok(())
-            });
+            window.draw(
+                &self.asteroid_asset.area().with_center(asteroid_pos),
+                &self.asteroid_asset,
+            );
         }
+
+        // Draw scores
+        let score_label = utils::create_score_label(self.score, &self.font);
+        let score_area = score_label.area().with_center(
+                self.screen_size - score_label.area().size().times(offset_px)
+        );
+
+        window.draw(
+            &score_area,
+            &score_label
+        );
 
         Ok(())
     }
@@ -204,10 +208,7 @@ impl Game {
 
         for asteroid in asteroids {
             let time_unit = self.time_delta.as_micros() as f32 * f32::powf(10.0, -6.0);
-            asteroid.pos += asteroid.velocity * time_unit;
-            if asteroid.pos.x > self.grid || asteroid.pos.y > self.grid {
-                info!("DELETE!!!")
-            }
+            asteroid.update(time_unit);
         }
     }
 
@@ -215,12 +216,14 @@ impl Game {
     fn clear_asteroids(&mut self) {
         let asteroids = self.asteroids.to_vec();
         let grid = self.grid;
-        asteroids
+        let score = asteroids
             .iter()
             .enumerate()
             .filter(|(_, a)| a.pos.x > grid || a.pos.y > grid)
             .map(|(e, _)| self.asteroids.remove(e))
-            .for_each(drop);
+            .count();
+
+        self.score += score as i32;
     }
 
     // Remove the asteroids when are out of sight.
@@ -238,6 +241,8 @@ impl Game {
 
     }
 }
+
+
 
 fn main() {
     env_logger::init();
