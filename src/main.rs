@@ -1,7 +1,6 @@
 use crate::entity::Asteroid;
 
 use std::time::{Duration, Instant};
-use rand::{ThreadRng};
 use quicksilver::{
     Result,
     geom::{Vector},
@@ -59,7 +58,6 @@ struct Game {
     screen_size: Vector,
     grid: f32,
     tile_size_px: Vector,
-    rng: ThreadRng,
     score: i32,
 }
 
@@ -82,7 +80,6 @@ impl State for Game {
             1.0 / grid,
             1.0 / grid
         ));
-        let rng = rand::thread_rng();
         let score = 500;
 
         let player = Entity {
@@ -101,7 +98,6 @@ impl State for Game {
             screen_size,
             grid,
             tile_size_px,
-            rng,
             score,
         })
     }

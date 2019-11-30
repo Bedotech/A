@@ -1,8 +1,7 @@
 use quicksilver::graphics::Color;
 use quicksilver::geom::Vector;
-use rand::{ThreadRng, Rng};
-use std::collections::HashMap;
-
+use rand::{thread_rng, Rng};
+use rand::seq::SliceRandom;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Asteroid {
@@ -26,7 +25,7 @@ pub struct Level {
 
 impl Level {
     pub fn generate_wave(&self, grid: f32) -> Vec<Asteroid> {
-        let mut rng = rand::thread_rng();
+        let mut rng = thread_rng();
         let (min, max) = self.fill_ratio_range;
         let asteroids_number = rng.gen_range(min, max) * grid;
 
@@ -38,7 +37,7 @@ impl Level {
         let mut positions: Vec<i32> = Vec::new();
 
         for _i in 0..asteroids_number as usize {
-            let pos = rng.choose(slice);
+            let pos = slice.choose(&mut rng);
             match pos {
                 Some(p) => positions.push(*p),
                 None => continue,
@@ -116,6 +115,3 @@ pub const LEVELS: [Level; 6] = [
         fill_ratio_range: (0.50, 0.71),
     },
 ];
-
-
-
