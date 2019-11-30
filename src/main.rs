@@ -1,7 +1,7 @@
 use crate::entity::Asteroid;
 
 use std::time::{Duration, Instant};
-use rand::{Rng, ThreadRng};
+use rand::{ThreadRng};
 use quicksilver::{
     Result,
     geom::{Vector},
@@ -48,30 +48,6 @@ struct Entity {
 }
 
 
-
-
-fn generate_asteroids() -> Vec<Asteroid> {
-    vec![
-        Asteroid {
-            pos: Vector::new(0,0),
-            velocity: Vector::new(0.0, 0.1),
-            color: Color::WHITE,
-        },
-
-        Asteroid {
-            pos: Vector::new(3,0),
-            velocity: Vector::new(0.3, 0.2),
-            color: Color::WHITE,
-        },
-
-        Asteroid {
-            pos: Vector::new(5,0),
-            velocity: Vector::new(0.0, 1.6),
-            color: Color::WHITE,
-        },
-    ]
-}
-
 struct Game {
     player: Entity,
     player_asset: Image,
@@ -90,16 +66,14 @@ struct Game {
 impl State for Game {
     fn new() -> Result<Self> {
         let style = FontStyle::new(48.0, Color::WHITE);
+        let o_style = FontStyle::new(48.0, Color::WHITE);
         let font = Font::load("clacon.ttf").wait().unwrap();
         let player_asset = font.render("A", &style).unwrap();
-        let asteroid_asset = font.render("O", &style).unwrap();
+        let asteroid_asset = font.render("O", &o_style).unwrap();
 
-        let player = Entity {
-            pos: Vector::new(0,0),
-            color: Color::WHITE,
-        };
 
-        let asteroids = generate_asteroids();
+
+        let asteroids = vec![];
         let last_instant = Instant::now();
         let time_delta = Duration::from_secs(0);
         let screen_size = Vector::new(1000.0, 1000.0);
@@ -109,7 +83,12 @@ impl State for Game {
             1.0 / grid
         ));
         let rng = rand::thread_rng();
-        let score = 0;
+        let score = 500;
+
+        let player = Entity {
+            pos: Vector::new(grid / 2.0, grid - 1.0),
+            color: Color::WHITE,
+        };
 
         Ok(Self {
             player,
@@ -228,16 +207,19 @@ impl Game {
 
     // Remove the asteroids when are out of sight.
     fn generate_asteroids(&mut self) {
-        // If asteroids are 10 wait
-        for _i in self.asteroids.len()..self.grid as usize {
-            let a = Asteroid {
-                pos: Vector::new(self.rng.gen_range(0, self.grid as u32) ,0),
-                velocity: Vector::new(0.0, self.rng.gen_range(0.8, 2.5)),
-                color: Color::WHITE,
-            };
+        // If all asteroinds in the current line are gone
+        let remain = self.asteroids
+            .iter()
+            .filter(|a| a.pos.y < 1.0)
+            .count();
 
-            self.asteroids.push(a);
+        if remain > 0 {
+            return;
         }
+
+        let new_wave = utils::get_level(self.score).generate_wave(self.grid);
+        self.asteroids.extend(new_wave.iter().cloned());
+        // self.asteroids.append(new_wave);
 
     }
 }
