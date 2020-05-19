@@ -1,5 +1,3 @@
-use crate::entity::Asteroid;
-
 use std::time::{Duration, Instant};
 use quicksilver::{
     Result,
@@ -9,6 +7,7 @@ use quicksilver::{
     prelude::*,
 };
 
+mod grid;
 mod utils;
 mod entity;
 
@@ -51,7 +50,7 @@ struct Game {
     player: Entity,
     player_asset: Image,
     font: Font,
-    asteroids: Vec<Asteroid>,
+    asteroids: Vec<grid::Asteroid>,
     asteroid_asset: Image,
     last_instant: Instant,
     time_delta: Duration,
@@ -68,8 +67,6 @@ impl State for Game {
         let font = Font::load("clacon.ttf").wait().unwrap();
         let player_asset = font.render("A", &style).unwrap();
         let asteroid_asset = font.render("O", &o_style).unwrap();
-
-
 
         let asteroids = vec![];
         let last_instant = Instant::now();

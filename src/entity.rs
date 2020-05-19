@@ -2,19 +2,7 @@ use quicksilver::graphics::Color;
 use quicksilver::geom::Vector;
 use rand::{thread_rng, Rng};
 use rand::seq::SliceRandom;
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Asteroid {
-    pub pos: Vector,
-    pub velocity: Vector,
-    pub color: Color,
-}
-
-impl Asteroid {
-    pub fn update(&mut self, time_delta: f32) {
-        self.pos += self.velocity * time_delta;
-    }
-}
+use crate::grid::Asteroid;
 
 // Rapresent a level of A game.
 pub struct Level {
