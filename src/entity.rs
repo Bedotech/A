@@ -2,7 +2,7 @@ use quicksilver::graphics::Color;
 use quicksilver::geom::Vector;
 use rand::{thread_rng, Rng};
 use rand::seq::SliceRandom;
-use crate::grid::Asteroid;
+use crate::grid::{Grid, Asteroid};
 
 // Rapresent a level of A game.
 pub struct Level {
@@ -12,15 +12,15 @@ pub struct Level {
 }
 
 impl Level {
-    pub fn generate_wave(&self, grid: f32) -> Vec<Asteroid> {
+    pub fn generate_wave(&self, grid: Grid) -> Vec<Asteroid> {
         let mut rng = thread_rng();
         let (min, max) = self.fill_ratio_range;
-        let asteroids_number = rng.gen_range(min, max) * grid;
+        let asteroids_number = rng.gen_range(min, max) * grid.grid_size;
 
         let (v_min, v_max) = self.speed_range;
         let asteroids_speed = rng.gen_range(v_min, v_max);
 
-        let mut grid_positions: Vec<i32> = (0..grid as i32).collect();
+        let mut grid_positions: Vec<i32> = (0..grid.grid_size as i32).collect();
         let slice: &mut [i32] = &mut grid_positions;
         let mut positions: Vec<i32> = Vec::new();
 

@@ -22,7 +22,7 @@ pub struct Grid {
     // The surface of the screen.
     screen_size: quicksilver::geom::Vector,
     // How many slot the grid have, is always a square.
-    grid_size: f32,
+    pub grid_size: f32,
     // Computed tile size.
     tile_size: quicksilver::geom::Vector,
 }
@@ -58,6 +58,23 @@ impl Grid {
         }
         let offset_px = Vector::new(0.5, 0.5);
         return Ok(self.tile_size.times(offset_px) + point.times(self.tile_size));
+    }
+
+    // Collide take two point and check if fit in the same grid cell,
+    // in reality check the euclidian distance between the two point, if this
+    // distance is below the half tile_size the collide append.
+    pub fn collide(self, a: Vector, b: Vector) -> bool {
+        let first = match self.translate_to_screen(a) {
+            Ok(p) => p,
+            Err(_) => a,
+        };
+
+        let second = match self.translate_to_screen(b) {
+            Ok(p) => p,
+            Err(_) => b,
+        };
+
+        return first.distance(second) < (self.tile_size.len() / 2.0)
     }
 }
 
@@ -104,6 +121,26 @@ mod tests {
             Ok(_) => panic!("Expected error"),
             Err(_) => (),
         }
+    }
+
+    #[test]
+    fn test_collide() {
+        let grid = Grid::new(100.0, 100.0, 10.0);
+        assert!(
+            grid.collide(Vector::new(0.2, 0.2), Vector::new(0.2, 0.2)),
+            "the same point always collide."
+        );
+
+        assert!(
+            grid.collide(Vector::new(0.2, 0.2), Vector::new(0.3, 0.3)),
+            "points in same cell is a collision."
+        );
+
+        assert!(
+            !grid.collide(Vector::new(5.0, 5.0), Vector::new(10.0, 10.0)),
+            "points near but in different cell don't collide."
+        );
+
 
 
     }
