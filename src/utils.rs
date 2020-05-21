@@ -1,7 +1,10 @@
 use quicksilver::{
     geom::Vector,
-    graphics::{Font, Image, FontStyle, Color}
+    graphics::{Font, Image, FontStyle, Color},
+    prelude::*,
 };
+use std::collections::HashMap;
+
 
 use crate::entity;
 
@@ -26,4 +29,43 @@ pub fn get_level(score: i32) -> &'static entity::Level {
         Some(_) => panic!(),
         None => panic!(),
     }
+}
+
+macro_rules! map(
+    { $($key:expr => $value:expr),+ } => {
+        {
+            let mut m = ::std::collections::HashMap::new();
+            $(
+                m.insert($key, $value);
+            )+
+            m
+        }
+     };
+);
+
+pub fn get_asteroids_asset() -> HashMap<&'static str, Image> {
+    let mut asteroids = HashMap::new();
+
+    let colors = map!{
+        "WHITE" => Color::WHITE,
+        "BLACK" => Color::BLACK,
+        "RED" => Color::RED,
+        "ORANGE" => Color::ORANGE,
+        "YELLOW" => Color::YELLOW,
+        "GREEN" => Color::GREEN,
+        "CYAN" => Color::CYAN,
+        "BLUE" => Color::BLUE,
+        "PURPLE" => Color::PURPLE,
+        "INDIGO" => Color::INDIGO
+    };
+
+    let font = Font::load("clacon.ttf").wait().unwrap();
+
+    for (label, color) in colors {
+        let o_style = FontStyle::new(48.0, color);
+        let asteroid_asset = font.render("O", &o_style).unwrap();
+        asteroids.entry(label).or_insert(asteroid_asset);
+    }
+
+    return asteroids
 }

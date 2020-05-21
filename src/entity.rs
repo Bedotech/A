@@ -6,7 +6,7 @@ use crate::grid::{Grid, Asteroid};
 
 // Rapresent a level of A game.
 pub struct Level {
-    pub color: Color,
+    pub color: &'static str,
     pub speed_range: (f32, f32),
     pub fill_ratio_range: (f32, f32),
 }
@@ -73,32 +73,32 @@ impl Level {
 
 pub const LEVELS: [Level; 6] = [
     Level {
-        color: Color::WHITE,
+        color: "WHITE",
         speed_range: (1.5, 1.5005),
         fill_ratio_range: (0.2, 0.25),
     },
     Level {
-        color: Color::RED,
+        color: "RED",
         speed_range: (1.8, 2.0),
         fill_ratio_range: (0.25, 0.27),
     },
     Level {
-        color: Color::MAGENTA,
+        color: "INDINGO",
         speed_range: (2.0, 2.2),
         fill_ratio_range: (0.35, 0.4),
     },
     Level {
-        color: Color::MAGENTA,
+        color: "ORANGE",
         speed_range: (2.0, 2.1),
         fill_ratio_range: (0.44, 0.48),
     },
     Level {
-        color: Color::MAGENTA,
+        color: "GREEN",
         speed_range: (2.5, 3.5),
         fill_ratio_range: (0.3, 0.35),
     },
     Level {
-        color: Color::MAGENTA,
+        color: "BLUE",
         speed_range: (3.0, 3.8),
         fill_ratio_range: (0.50, 0.71),
     },

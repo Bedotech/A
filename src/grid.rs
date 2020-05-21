@@ -1,11 +1,10 @@
-use quicksilver::graphics::Color;
 use quicksilver::geom::Vector;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Asteroid {
     pub pos: Vector,
     pub velocity: Vector,
-    pub color: Color,
+    pub color: &'static str,
 }
 
 impl Asteroid {

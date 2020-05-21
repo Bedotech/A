@@ -1,4 +1,5 @@
 use std::time::{Duration, Instant};
+use std::collections::HashMap;
 use quicksilver::{
     Result,
     geom::{Vector},
@@ -51,7 +52,7 @@ struct Game {
     player_asset: Image,
     font: Font,
     asteroids: Vec<grid::Asteroid>,
-    asteroid_asset: Image,
+    asteroid_asset: HashMap<&'static str, Image>,
     last_instant: Instant,
     time_delta: Duration,
     screen_size: Vector,
@@ -62,10 +63,9 @@ struct Game {
 impl State for Game {
     fn new() -> Result<Self> {
         let style = FontStyle::new(48.0, Color::WHITE);
-        let o_style = FontStyle::new(48.0, Color::WHITE);
         let font = Font::load("clacon.ttf").wait().unwrap();
         let player_asset = font.render("A", &style).unwrap();
-        let asteroid_asset = font.render("O", &o_style).unwrap();
+        let asteroid_asset = utils::get_asteroids_asset();
 
         let asteroids = vec![];
         let last_instant = Instant::now();
@@ -153,9 +153,15 @@ impl State for Game {
                 Ok(p) => p,
                 Err(_) => Vector::new(0.0, 0.0),
             };
+
+            let asset = match self.asteroid_asset.get(asteroid.color) {
+                Some(i) => i,
+                None => &self.asteroid_asset["WHITE"]
+            };
+
             window.draw(
-                &self.asteroid_asset.area().with_center(asteroid_pos),
-                &self.asteroid_asset,
+                &asset.area().with_center(asteroid_pos),
+                asset,
             );
         }
 
@@ -196,12 +202,15 @@ impl Game {
     // Remove the asteroids when are out of sight.
     fn clear_asteroids(&mut self) {
         let asteroids = self.asteroids.to_vec();
+        let mut score = self.asteroids.len();
+
         self.asteroids = asteroids
             .into_iter()
             .filter(|a| self.grid.is_in(a.pos))
             .collect();
 
-        let score = self.asteroids.len();
+        // Subtract the left asteroids.
+        score -= self.asteroids.len();
 
         self.score += score as i32;
     }
