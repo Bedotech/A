@@ -72,7 +72,7 @@ impl State for Game {
         let time_delta = Duration::from_secs(0);
         let screen_size = Vector::new(1000.0, 1000.0);
         let grid = grid::Grid::new(screen_size.x, screen_size.y, 30.0);
-        let score = 500;
+        let score = 0;
 
         let player = Entity {
             pos: Vector::new(30.0 / 2.0, 30.0 - 1.0),
